@@ -1,16 +1,13 @@
 package ru.practicum.shareit.item.dto;
 
-import lombok.Builder;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
-/**
- * TODO Sprint add-controllers.
- */
 @Data
-@Builder
-public class ItemDto {
-    private Integer id;
+public class ItemUpdateDto {
+    @Size(max = 25)
     private String name;
+    @Size(max = 200)
     private String description;
     private Boolean available;
 }
