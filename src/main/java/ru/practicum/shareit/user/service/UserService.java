@@ -10,11 +10,11 @@ import ru.practicum.shareit.user.dao.UserRepository;
 import ru.practicum.shareit.user.dto.UserCreateDto;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.dto.UserUpdateDto;
-import ru.practicum.shareit.user.mapper.UserMapper;
 
 import java.util.Collection;
 
-import static ru.practicum.shareit.user.mapper.UserMapper.toUserDto;
+import static ru.practicum.shareit.user.mapper.UserMapper.toDto;
+import static ru.practicum.shareit.user.mapper.UserMapper.toEntity;
 import static ru.practicum.shareit.util.Updater.runIfNotNull;
 
 @Service
@@ -24,10 +24,12 @@ public class UserService {
     private final UserRepository userRepository;
 
     public UserDto create(final UserCreateDto newUser) {
+        log.trace("запрос на создание пользователя");
         doesEmailExists(newUser.getEmail(), 0);
-        User user = UserMapper.newUserDtoToUser(newUser);
+        User user = toEntity(newUser);
         userRepository.create(user);
-        return toUserDto(user);
+        log.debug("пользователь добавлен{}", user);
+        return toDto(user);
     }
 
     public UserDto update(final UserUpdateDto updatedUser, final int id) {
@@ -36,23 +38,23 @@ public class UserService {
         runIfNotNull(updatedUser.getName(), () -> oldUser.setName(updatedUser.getName()));
         runIfNotNull(updatedUser.getEmail(), () -> oldUser.setEmail(updatedUser.getEmail()));
         userRepository.update(oldUser);
-        return toUserDto(oldUser);
+        log.debug("пользователь обновлен {}", oldUser);
+        return toDto(oldUser);
     }
 
     public void delete(int id) {
+        getUserById(id);
+        log.debug("пользователь {} удален", id);
         userRepository.delete(id);
     }
 
     public Collection<UserDto> findAll() {
-        return userRepository
-                .findAll()
-                .stream()
-                .map(UserMapper::toUserDto)
-                .toList();
+        log.debug("запрос всех пользователей");
+        return toDto(userRepository.findAll());
     }
 
     public UserDto findById(int id) {
-        return UserMapper.toUserDto(getUserById(id));
+        return toDto(getUserById(id));
     }
 
     private User getUserById(int id) {

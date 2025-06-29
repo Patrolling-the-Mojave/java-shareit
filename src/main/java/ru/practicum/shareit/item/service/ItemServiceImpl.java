@@ -9,7 +9,6 @@ import ru.practicum.shareit.item.dao.ItemRepository;
 import ru.practicum.shareit.item.dto.ItemCreateDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemUpdateDto;
-import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.dao.UserRepository;
@@ -17,6 +16,8 @@ import ru.practicum.shareit.user.dao.UserRepository;
 import java.util.Collection;
 import java.util.Collections;
 
+import static ru.practicum.shareit.item.mapper.ItemMapper.toDto;
+import static ru.practicum.shareit.item.mapper.ItemMapper.toEntity;
 import static ru.practicum.shareit.util.Updater.runIfNotNull;
 
 @Service
@@ -35,38 +36,39 @@ public class ItemServiceImpl implements ItemService {
         runIfNotNull(updatedItem.getName(), () -> oldItem.setName(updatedItem.getName()));
         runIfNotNull(updatedItem.getDescription(), () -> oldItem.setDescription(updatedItem.getDescription()));
         runIfNotNull(updatedItem.getAvailable(), () -> oldItem.setAvailable(updatedItem.getAvailable()));
-        return ItemMapper.toItemDto(itemRepository.update(oldItem));
+        log.trace("вещь с id {} обновлена", itemId);
+        log.debug("обновленная вещь {}", oldItem);
+        return toDto(itemRepository.update(oldItem));
     }
 
     @Override
     public Collection<ItemDto> search(String query) {
+        log.trace("запрос на поиск по строке");
         if (query == null || query.isBlank()) {
             return Collections.emptyList();
         }
-        return itemRepository.findItemsByQuery(query)
-                .stream()
-                .map(ItemMapper::toItemDto)
-                .toList();
+        return toDto(itemRepository.findItemsByQuery(query));
     }
 
     @Override
     public Collection<ItemDto> findItemsByOwnerId(int ownerId) {
-        return itemRepository.findItemsByOwnerId(ownerId)
-                .stream()
-                .map(ItemMapper::toItemDto)
-                .toList();
+        log.debug("поиск предметов пользователя с id {}", ownerId);
+        return toDto(itemRepository.findItemsByOwnerId(ownerId));
     }
 
     @Override
     public ItemDto findById(int itemId) {
-        return ItemMapper.toItemDto(getItemById(itemId));
+        log.debug("поиск вещи с id {}", itemId);
+        return toDto(getItemById(itemId));
     }
 
     @Override
     public ItemDto create(ItemCreateDto item, int userId) {
+        log.trace("запрос на создание предмета от пользователя {}", userId);
         User owner = getUserById(userId);
-        Item newItem = ItemMapper.createItemDtoToItem(item, owner);
-        return ItemMapper.toItemDto(itemRepository.create(newItem));
+        Item newItem = toEntity(item, owner);
+        log.debug("новый предмет добавлен {}", newItem);
+        return toDto(itemRepository.create(newItem));
     }
 
     private Item getItemById(int id) {

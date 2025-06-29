@@ -23,11 +23,7 @@ public class InMemoryUserRepository implements UserRepository {
 
     @Override
     public Optional<User> findById(int id) {
-        User user = users.get(id);
-        if (user == null) {
-            return Optional.empty();
-        }
-        return Optional.of(user);
+        return Optional.ofNullable(users.get(id));
     }
 
     @Override
