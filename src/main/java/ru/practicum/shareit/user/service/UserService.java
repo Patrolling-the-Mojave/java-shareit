@@ -27,9 +27,8 @@ public class UserService {
         log.trace("запрос на создание пользователя");
         doesEmailExists(newUser.getEmail(), 0);
         User user = toEntity(newUser);
-        userRepository.create(user);
         log.debug("пользователь добавлен{}", user);
-        return toDto(user);
+        return toDto(userRepository.save(user));
     }
 
     public UserDto update(final UserUpdateDto updatedUser, final int id) {
@@ -37,7 +36,7 @@ public class UserService {
         doesEmailExists(updatedUser.getEmail(), id);
         runIfNotNull(updatedUser.getName(), () -> oldUser.setName(updatedUser.getName()));
         runIfNotNull(updatedUser.getEmail(), () -> oldUser.setEmail(updatedUser.getEmail()));
-        userRepository.update(oldUser);
+        userRepository.save(oldUser);
         log.debug("пользователь обновлен {}", oldUser);
         return toDto(oldUser);
     }
@@ -45,7 +44,7 @@ public class UserService {
     public void delete(int id) {
         getUserById(id);
         log.debug("пользователь {} удален", id);
-        userRepository.delete(id);
+        userRepository.deleteById(id);
     }
 
     public Collection<UserDto> findAll() {
