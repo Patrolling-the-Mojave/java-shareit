@@ -38,6 +38,9 @@ public class BookingServiceImpl implements BookingService {
         if (!item.getAvailable()) {
             throw new InaccessibleItemException("предмет с id " + item.getId() + " уже занят");
         }
+        if (newBooking.getStart().isAfter(newBooking.getEnd())) {
+            throw new IllegalArgumentException("начало бронирования не должно быть позже конца");
+        }
         Booking booking = toEntity(newBooking, user, item);
         return toDto(bookingRepository.save(booking));
     }
