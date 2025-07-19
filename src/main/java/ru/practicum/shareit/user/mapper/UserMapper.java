@@ -3,6 +3,7 @@ package ru.practicum.shareit.user.mapper;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.dto.UserCreateDto;
 import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.user.dto.UserShortDto;
 
 import java.util.Collection;
 
@@ -13,6 +14,10 @@ public class UserMapper {
                 .name(user.getName())
                 .email(user.getEmail())
                 .build();
+    }
+
+    public static UserShortDto toShortDto(User user) {
+        return new UserShortDto(user.getId(), user.getName());
     }
 
     public static Collection<UserDto> toDto(Collection<User> users) {

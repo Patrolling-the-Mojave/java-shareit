@@ -6,7 +6,6 @@ import lombok.Data;
 
 @Data
 public class UserUpdateDto {
-    private Integer id;
     @Size(max = 25)
     private String name;
     @Email
