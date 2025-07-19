@@ -8,11 +8,7 @@ import ru.practicum.shareit.item.model.Item;
 import java.util.Collection;
 
 public interface ItemRepository extends JpaRepository<Item, Integer> {
-    @Query("""
-            SElECT i FROM Item i
-            JOIN FETCH i.owner
-            WHERE i.owner.id = :ownerId
-            """)
+
     Collection<Item> findByOwnerId(@Param("ownerId") int ownerId);
 
     @Query("""

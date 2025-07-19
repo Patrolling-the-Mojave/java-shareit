@@ -7,6 +7,7 @@ import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.dao.BookingRepository;
 import ru.practicum.shareit.booking.dto.BookingCreateDto;
 import ru.practicum.shareit.booking.dto.BookingDto;
+import ru.practicum.shareit.booking.enums.BookingState;
 import ru.practicum.shareit.booking.enums.BookingStatus;
 import ru.practicum.shareit.exception.InaccessibleItemException;
 import ru.practicum.shareit.exception.NoAccessException;
@@ -70,18 +71,40 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public Collection<BookingDto> findAllByBookerAndState(int userId, String state) {
-        getUserById(userId);
-        return toDto(bookingRepository.findByBookerAndState(userId, state));
+    public Collection<BookingDto> findAllByBookerAndState(int bookerId, String state) {
+        getUserById(bookerId);
+        final BookingState bookingState = getBookingStateFromString(state);
+        Collection<Booking> bookings;
+        switch (bookingState) {
+            case ALL -> bookings = bookingRepository.findAllByBookerId(bookerId);
+            case CURRENT -> bookings = bookingRepository.findAllCurrentByBooker(bookerId);
+            case PAST -> bookings = bookingRepository.findAllPastByBooker(bookerId);
+            case FUTURE -> bookings = bookingRepository.findAllFutureByBooker(bookerId);
+            case WAITING -> bookings = bookingRepository.findAllWaitingByBooker(bookerId);
+            case REJECTED -> bookings = bookingRepository.findAllRejectedByBooker(bookerId);
+            default -> throw new IllegalArgumentException("неизвестное состояние: " + bookingState);
+        }
+        return toDto(bookings);
     }
 
     @Override
     public Collection<BookingDto> findAllByItemOwnerAndState(int ownerId, String state) {
         getUserById(ownerId);
+        final BookingState bookingState = getBookingStateFromString(state);
         if (!itemRepository.existByOwnerId(ownerId)) {
             throw new OwnerHasNoItemsException("У пользователя " + ownerId + " нет предметов для бронирования");
         }
-        return toDto(bookingRepository.findByOwnerIdAndState(ownerId, state));
+        Collection<Booking> bookings;
+        switch (bookingState) {
+            case ALL -> bookings = bookingRepository.findAllByItemOwner(ownerId);
+            case CURRENT -> bookings = bookingRepository.findAllCurrentByItemOwner(ownerId);
+            case PAST -> bookings = bookingRepository.findAllPastByItemOwner(ownerId);
+            case FUTURE -> bookings = bookingRepository.findAllFutureByItemOwner(ownerId);
+            case WAITING -> bookings = bookingRepository.findAllWaitingByItemOwner(ownerId);
+            case REJECTED -> bookings = bookingRepository.findAllRejectedByItemOwner(ownerId);
+            default -> throw new IllegalArgumentException("неизвестное состояние: " + bookingState);
+        }
+        return toDto(bookings);
     }
 
 
@@ -98,5 +121,15 @@ public class BookingServiceImpl implements BookingService {
     private Item getItemById(int id) {
         return itemRepository.findById(id).orElseThrow(() ->
                 new NotFoundException("предмет с id " + id + " не найден"));
+    }
+
+    private BookingState getBookingStateFromString(String state) {
+        final BookingState bookingState;
+        try {
+            bookingState = BookingState.valueOf(state.toUpperCase().trim());
+        } catch (IllegalArgumentException exception) {
+            throw new IllegalArgumentException(String.format("состояние бронирования %s не поддерживается", state));
+        }
+        return bookingState;
     }
 }

@@ -15,35 +15,120 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
             SELECT b FROM Booking b
             JOIN FETCH b.booker
             JOIN FETCH b.item
-            WHERE b.booker.id = :userId
-            AND (
-            :state = 'ALL' OR
-            (:state = 'CURRENT' AND b.start <= CURRENT_TIMESTAMP AND b.end >= CURRENT_TIMESTAMP) OR
-            (:state = 'PAST' AND b.end <= CURRENT_TIMESTAMP) OR
-            (:state = 'FUTURE' AND b.start >= CURRENT_TIMESTAMP) OR
-            (:state = 'WAITING' AND b.status = 'WAITING') OR
-            (:state = 'REJECTED' AND b.status = 'REJECTED')
-            )
+            WHERE b.booker.id = :bookerId
             ORDER BY b.start DESC
             """)
-    Collection<Booking> findByBookerAndState(@Param("userId") int userId, @Param("state") String state);
+    Collection<Booking> findAllByBookerId(@Param("bookerId") int bookerId);
+
+    @Query("""
+            SELECT b FROM Booking b
+            JOIN FETCH b.booker
+            JOIN FETCH b.item
+            WHERE b.booker.id = :bookerId AND
+            b.start <= CURRENT_TIMESTAMP AND b.end >= CURRENT_TIMESTAMP
+            ORDER BY b.start DESC
+            """)
+    Collection<Booking> findAllCurrentByBooker(@Param("bookerId") int bookerId);
+
+    @Query("""
+            SELECT b FROM Booking b
+            JOIN FETCH b.booker
+            JOIN FETCH b.item
+            WHERE b.booker.id = :bookerId AND
+            b.end <= CURRENT_TIMESTAMP
+            ORDER BY b.start DESC
+            """)
+    Collection<Booking> findAllPastByBooker(@Param("bookerId") int bookerId);
+
+    @Query("""
+            SELECT b FROM Booking b
+            JOIN FETCH b.booker
+            JOIN FETCH b.item
+            WHERE b.booker.id = :bookerId AND
+            b.start >= CURRENT_TIMESTAMP
+            ORDER BY b.start DESC
+            """)
+    Collection<Booking> findAllFutureByBooker(@Param("bookerId") int bookerId);
+
+
+    @Query("""
+            SELECT b FROM Booking b
+            JOIN FETCH b.booker
+            JOIN FETCH b.item
+            WHERE b.booker.id = :bookerId AND
+            b.status = 'WAITING'
+            ORDER BY b.start DESC
+            """)
+    Collection<Booking> findAllWaitingByBooker(@Param("bookerId") int bookerId);
+
+    @Query("""
+            SELECT b FROM Booking b
+            JOIN FETCH b.booker
+            JOIN FETCH b.item
+            WHERE b.booker.id = :bookerId AND
+            b.status = 'REJECTED'
+            ORDER BY b.start DESC
+            """)
+    Collection<Booking> findAllRejectedByBooker(@Param("bookerId") int bookerId);
 
     @Query("""
             SELECT b FROM Booking b
             JOIN FETCH b.booker
             JOIN FETCH b.item i
             WHERE i.owner.id = :ownerId
-            AND (
-            :state = 'ALL' OR
-            (:state = 'CURRENT' AND b.start <= CURRENT_TIMESTAMP AND b.end >= CURRENT_TIMESTAMP) OR
-            (:state = 'PAST' AND b.end <= CURRENT_TIMESTAMP) OR
-            (:state = 'FUTURE' AND b.start >= CURRENT_TIMESTAMP) OR
-            (:state = 'WAITING' AND b.status = 'WAITING') OR
-            (:state = 'REJECTED' AND b.status = 'REJECTED')
-            )
             ORDER BY b.start DESC
             """)
-    Collection<Booking> findByOwnerIdAndState(@Param("ownerId") int ownerId, @Param("state") String state);
+    Collection<Booking> findAllByItemOwner(@Param("ownerId") int ownerId);
+
+    @Query("""
+            SELECT b FROM Booking b
+            JOIN FETCH b.booker
+            JOIN FETCH b.item i
+            WHERE i.owner.id = :ownerId AND
+            b.start <= CURRENT_TIMESTAMP AND b.end >= CURRENT_TIMESTAMP
+            ORDER BY b.start DESC
+            """)
+    Collection<Booking> findAllCurrentByItemOwner(@Param("ownerId") int ownerId);
+
+    @Query("""
+            SELECT b FROM Booking b
+            JOIN FETCH b.booker
+            JOIN FETCH b.item i
+            WHERE i.owner.id = :ownerId AND
+            b.end <= CURRENT_TIMESTAMP
+            ORDER BY b.start DESC
+            """)
+    Collection<Booking> findAllPastByItemOwner(@Param("ownerId") int itemOwner);
+
+    @Query("""
+            SELECT b FROM Booking b
+            JOIN FETCH b.booker
+            JOIN FETCH b.item i
+            WHERE i.owner.id = :ownerId AND
+            b.start >= CURRENT_TIMESTAMP
+            ORDER BY b.start DESC
+            """)
+    Collection<Booking> findAllFutureByItemOwner(@Param("ownerId") int itemOwner);
+
+    @Query("""
+            SELECT b FROM Booking b
+            JOIN FETCH b.booker
+            JOIN FETCH b.item i
+            WHERE i.owner.id = :ownerId AND
+            b.status = 'WAITING'
+            ORDER BY b.start DESC
+            """)
+    Collection<Booking> findAllWaitingByItemOwner(@Param("ownerId") int itemOwner);
+
+    @Query("""
+            SELECT b FROM Booking b
+            JOIN FETCH b.booker
+            JOIN FETCH b.item i
+            WHERE i.owner.id = :ownerId AND
+            b.status = 'REJECTED'
+            ORDER BY b.start DESC
+            """)
+    Collection<Booking> findAllRejectedByItemOwner(@Param("ownerId") int itemOwner);
 
     @Query("""
             SELECT b FROM Booking b
