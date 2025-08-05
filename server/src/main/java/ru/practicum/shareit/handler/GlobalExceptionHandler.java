@@ -8,10 +8,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import ru.practicum.shareit.exception.EmailAlreadyExistException;
-import ru.practicum.shareit.exception.InaccessibleItemException;
-import ru.practicum.shareit.exception.NoAccessException;
-import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.exception.*;
 
 @Component
 @Slf4j
@@ -21,6 +18,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse handleNotFound(final NotFoundException exception) {
+        log.error("not found", exception);
+        return new ErrorResponse("not found", exception.getMessage());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleOwnerHasNoItem(final OwnerHasNoItemsException exception) {
         log.error("not found", exception);
         return new ErrorResponse("not found", exception.getMessage());
     }

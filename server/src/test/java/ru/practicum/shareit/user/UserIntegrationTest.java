@@ -88,5 +88,86 @@ public class UserIntegrationTest {
         assertThat(response.getBody()).contains("email already exist");
     }
 
+    @Test
+    void update_withDuplicateEmail_shouldReturnConflict() {
+        // Создаём первого пользователя
+        template.postForEntity("/users", newUser, UserDto.class);
+
+        // Второго
+        UserCreateDto secondUser = new UserCreateDto("Second", "second@test.com");
+        ResponseEntity<UserDto> secondResponse = template.postForEntity("/users", secondUser, UserDto.class);
+        int secondId = secondResponse.getBody().getId();
+
+        // Пытаемся обновить второго на email первого
+        UserUpdateDto updateDto = new UserUpdateDto(null, newUser.getEmail());
+        HttpEntity<UserUpdateDto> request = new HttpEntity<>(updateDto);
+        ResponseEntity<String> response = template.exchange(
+                "/users/" + secondId,
+                HttpMethod.PATCH,
+                request,
+                String.class
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(response.getBody()).contains("email already exist");
+    }
+
+    @Test
+    void findById_shouldReturnUser() {
+        ResponseEntity<UserDto> createResponse = template.postForEntity("/users", newUser, UserDto.class);
+        int userId = createResponse.getBody().getId();
+
+        ResponseEntity<UserDto> getResponse = template.getForEntity("/users/" + userId, UserDto.class);
+
+        assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+        UserDto userDto = getResponse.getBody();
+        assertThat(userDto).isNotNull();
+        assertThat(userDto.getId()).isEqualTo(userId);
+        assertThat(userDto.getName()).isEqualTo(newUser.getName());
+        assertThat(userDto.getEmail()).isEqualTo(newUser.getEmail());
+    }
+
+    @Test
+    void findById_nonExistentUser_shouldReturnNotFound() {
+        ResponseEntity<String> response = template.getForEntity("/users/999", String.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody()).contains("пользователь с id 999 не найден");
+    }
+
+    @Test
+    void findAll_shouldReturnAllUsers() {
+        template.postForEntity("/users", newUser, UserDto.class);
+        UserCreateDto user2 = new UserCreateDto("user2", "user2@test.com");
+        template.postForEntity("/users", user2, UserDto.class);
+
+        ResponseEntity<UserDto[]> response = template.getForEntity("/users", UserDto[].class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        UserDto[] users = response.getBody();
+        assertThat(users).hasSize(2);
+        assertThat(users[0].getEmail()).isEqualTo(newUser.getEmail());
+        assertThat(users[1].getEmail()).isEqualTo(user2.getEmail());
+    }
+
+    @Test
+    void delete_shouldRemoveUser() {
+        ResponseEntity<UserDto> createResponse = template.postForEntity("/users", newUser, UserDto.class);
+        int userId = createResponse.getBody().getId();
+
+        ResponseEntity<Void> deleteResponse = template.exchange(
+                "/users/" + userId,
+                HttpMethod.DELETE,
+                null,
+                Void.class
+        );
+
+        assertThat(deleteResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        // Проверяем, что пользователь больше не существует
+        ResponseEntity<String> getResponse = template.getForEntity("/users/" + userId, String.class);
+        assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
 
 }
